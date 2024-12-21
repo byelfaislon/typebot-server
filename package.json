@@ -1,0 +1,14 @@
+{
+  "name": "typebot-server",
+  "version": "1.0.0",
+  "description": "Servidor para integração Typebot com Facebook API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.4.0",
+    "crypto": "^1.0.1"
+  }
+}
