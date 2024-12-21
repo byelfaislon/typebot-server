@@ -32,10 +32,10 @@ app.post('/register-purchase', async (req, res) => {
                     custom_data: {
                         currency: 'BRL',
                         value: purchaseAmount,
-                    },
-                    test_event_code: 'TEST63842' // Código de teste para verificar no Facebook
+                    }
                 }
             ],
+            test_event_code: 'TEST63842', // Agora está no nível correto
             access_token: process.env.FB_ACCESS_TOKEN,
         });
 
