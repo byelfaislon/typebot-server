@@ -6,15 +6,20 @@ const app = express();
 app.use(express.json());
 
 const PIXEL_ID = "1183255336100829"; // Substitua pelo seu Pixel ID
-const ACCESS_TOKEN = "EAADFdaJM3XoBO2xbWKeyHri222SZBBZBHckQuZBDhyM2r89bqUTP75AV632aP56E1XqGWTm0UZAlFGPkQ8n3W3tmHiqFdjC2mmpSBU2LzuepZC9PS5gsj9ZADMQdUBeinXGk6a38mlc8tlPhthPfSCE9ZAXeKRcr5ywNIjH3MLEQowdhQt3fHhwNH64qUscj59mgAZDZD"; // Substitua pelo seu Token de Acesso
+const ACCESS_TOKEN = "EAADFdaJM3XoBO2xbWKeyHri222SZBBZBHckQuZBDhyM2r89bqUTP75AV632aP56E1XqGWTm0UZAlFGPkQ8n3W3tmHiqFdjC2mmpSBU2LzuepZC9PS5gsj9ZAXeKRcr5ywNIjH3MLEQowdhQt3fHhwNH64qUscj59mgAZDZD"; // Substitua pelo seu Token de Acesso
 
 app.post("/register-purchase", async (req, res) => {
   try {
     // Informações da requisição recebida
-    const { userId, purchaseAmount } = req.body;
+    const { purchaseAmount, phoneNumber } = req.body;
 
     // Gerar um ID único para o evento
     const eventId = uuidv4();
+
+    // Capturar informações do cliente
+    const clientIpAddress = req.ip; // IP do cliente
+    const clientUserAgent = req.get("User-Agent"); // User Agent do cliente
+    const fbc = req.headers["fbc"] || "fb.1.1672537600.abc123"; // Substitua por um valor real, se disponível
 
     // Montar o payload para a API do Facebook
     const payload = {
@@ -23,8 +28,10 @@ app.post("/register-purchase", async (req, res) => {
           event_name: "Purchase",
           event_time: Math.floor(Date.now() / 1000), // Timestamp atual em segundos
           user_data: {
-            client_ip_address: req.ip, // Captura o IP do cliente
-            client_user_agent: req.get("User-Agent"), // Captura o User-Agent do cliente
+            client_ip_address: clientIpAddress,
+            client_user_agent: clientUserAgent,
+            fbc: fbc,
+            phone: phoneNumber, // Adicionando o número de telefone
           },
           custom_data: {
             currency: "BRL",
