@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const crypto = require('crypto'); // Para converter dados sensíveis em hash
 
 const app = express();
 app.use(bodyParser.json());
@@ -8,6 +9,11 @@ app.use(bodyParser.json());
 // Configurações
 const PIXEL_ID = '1183255336100829'; // Substitua pelo seu ID do Pixel
 const PIXEL_TOKEN = 'EAADFdaJM3XoBO2xbWKeyHri222SZBBZBHckQuZBDhyM2r89bqUTP75AV632aP56E1XqGWTm0UZAlFGPkQ8n3W3tmHiqFdjC2mmpSBU2LzuepZC9PS5gsj9ZADMQdUBeinXGk6a38mlc8tlPhthPfSCE9ZAXeKRcr5ywNIjH3MLEQowdhQt3fHhwNH64qUscj59mgAZDZD'; // Substitua pelo token
+
+// Função para converter dados em hash SHA256
+function hashData(data) {
+    return crypto.createHash('sha256').update(data).digest('hex');
+}
 
 app.post('/register-purchase', async (req, res) => {
     const { userId, purchaseAmount, phoneNumber } = req.body;
@@ -30,8 +36,8 @@ app.post('/register-purchase', async (req, res) => {
                     event_time: Math.floor(new Date().getTime() / 1000),
                     action_source: 'website',
                     user_data: {
-                        external_id: userId,
-                        phone: phoneNumber,
+                        external_id: hashData(userId), // Hash do userId
+                        phone: phoneNumber ? hashData(phoneNumber) : null, // Hash do número de telefone
                         client_ip_address: clientIp,
                         client_user_agent: userAgent,
                         fbc: req.query.fbc || null, // Capturar fbc dos parâmetros da URL, se disponível
