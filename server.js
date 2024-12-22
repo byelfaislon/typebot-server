@@ -20,34 +20,29 @@ app.post('/register-purchase', async (req, res) => {
     }
 
     try {
-        // Enviar evento para a API de Conversões do Facebook
-        await axios.post(`https://graph.facebook.com/v13.0/1183255336100829/events`, {
+        // Dados para enviar à API do Facebook
+        const data = {
             data: [
                 {
                     event_name: 'Purchase',
                     event_time: Math.floor(Date.now() / 1000),
                     user_data: {
-                        em: [hashData(userId)], // Hashe o e-mail ou ID
-                        ph: phoneNumber ? [hashData(phoneNumber)] : undefined, // Hashe o número de telefone, se disponível
+                        em: [hashData(userId)], // Hashe o e-mail
+                        ph: phoneNumber ? [hashData(phoneNumber)] : undefined, // Hashe o telefone, se disponível
                         client_ip_address: req.ip, // Endereço IP do cliente
                         client_user_agent: req.headers['user-agent'], // User Agent do cliente
                     },
                     custom_data: {
                         currency: 'BRL',
                         value: purchaseAmount,
-                    }
+                    },
+                    test_event_code: 'TEST_EVENT_CODE' // Substitua pelo seu código de teste do Facebook
                 }
             ],
             access_token: process.env.FB_ACCESS_TOKEN,
-        });
+        };
 
-        console.log("Evento enviado com sucesso!");
-        res.status(200).json({ message: 'Compra registrada com sucesso!' });
-    } catch (error) {
-        console.error("Erro ao enviar para a API do Facebook: ", error.response?.data || error.message);
-        res.status(500).json({ message: 'Erro ao registrar compra' });
-    }
-});
+        // Enviar evento para a API do Facebook
+        const response = await axios.post(`https://graph.facebook.com/v13.0/1183255336100829/events`, data);
 
-// Iniciar o servidor
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+        console.log("Even
