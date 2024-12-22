@@ -6,14 +6,14 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Função para hash do e-mail ou identificador
-function hashEmail(email) {
-    return crypto.createHash('sha256').update(email).digest('hex');
+// Função para hash de dados (e-mail, telefone, etc.)
+function hashData(data) {
+    return crypto.createHash('sha256').update(data).digest('hex');
 }
 
 // Endpoint para registrar compras
 app.post('/register-purchase', async (req, res) => {
-    const { userId, purchaseAmount } = req.body;
+    const { userId, purchaseAmount, phoneNumber } = req.body;
 
     if (!userId || !purchaseAmount) {
         return res.status(400).json({ message: 'Dados inválidos: userId e purchaseAmount são obrigatórios.' });
@@ -27,7 +27,10 @@ app.post('/register-purchase', async (req, res) => {
                     event_name: 'Purchase',
                     event_time: Math.floor(Date.now() / 1000),
                     user_data: {
-                        em: [hashEmail(userId)], // Hashe o e-mail ou ID
+                        em: [hashData(userId)], // Hashe o e-mail ou ID
+                        ph: phoneNumber ? [hashData(phoneNumber)] : undefined, // Hashe o número de telefone, se disponível
+                        client_ip_address: req.ip, // Endereço IP do cliente
+                        client_user_agent: req.headers['user-agent'], // User Agent do cliente
                     },
                     custom_data: {
                         currency: 'BRL',
@@ -35,7 +38,6 @@ app.post('/register-purchase', async (req, res) => {
                     }
                 }
             ],
-            test_event_code: 'TEST63842', // Agora está no nível correto
             access_token: process.env.FB_ACCESS_TOKEN,
         });
 
