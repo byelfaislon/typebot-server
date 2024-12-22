@@ -36,7 +36,7 @@ app.post('/register-purchase', async (req, res) => {
                         currency: 'BRL',
                         value: purchaseAmount,
                     },
-                    test_event_code: 'TEST_EVENT_CODE' // Substitua pelo seu código de teste do Facebook
+                    test_event_code: 'TEST54809' // Código de teste do Facebook
                 }
             ],
             access_token: process.env.FB_ACCESS_TOKEN,
@@ -45,4 +45,13 @@ app.post('/register-purchase', async (req, res) => {
         // Enviar evento para a API do Facebook
         const response = await axios.post(`https://graph.facebook.com/v13.0/1183255336100829/events`, data);
 
-        console.log("Even
+        console.log("Evento enviado com sucesso ao Facebook:", response.data);
+        res.status(200).json({ message: 'Compra registrada com sucesso!' });
+    } catch (error) {
+        console.error("Erro ao enviar para a API do Facebook:", error.response?.data || error.message);
+        res.status(500).json({ message: 'Erro ao registrar compra' });
+    }
+});
+
+// Iniciar o servidor
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
