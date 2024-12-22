@@ -1,57 +1,57 @@
-const express = require('express');
-const axios = require('axios');
-const crypto = require('crypto');
-const app = express();
-const PORT = process.env.PORT || 3000;
+const express = require("express");
+const axios = require("axios");
+const { v4: uuidv4 } = require("uuid");
 
+const app = express();
 app.use(express.json());
 
-// Função para hash de dados (e-mail, telefone, etc.)
-function hashData(data) {
-    return crypto.createHash('sha256').update(data).digest('hex');
-}
+const PIXEL_ID = "1183255336100829"; // Substitua pelo seu Pixel ID
+const ACCESS_TOKEN = "EAADFdaJM3XoBO2xbWKeyHri222SZBBZBHckQuZBDhyM2r89bqUTP75AV632aP56E1XqGWTm0UZAlFGPkQ8n3W3tmHiqFdjC2mmpSBU2LzuepZC9PS5gsj9ZADMQdUBeinXGk6a38mlc8tlPhthPfSCE9ZAXeKRcr5ywNIjH3MLEQowdhQt3fHhwNH64qUscj59mgAZDZD"; // Substitua pelo seu Token de Acesso
 
-// Endpoint para registrar compras
-app.post('/register-purchase', async (req, res) => {
-    const { userId, purchaseAmount, phoneNumber } = req.body;
+app.post("/register-purchase", async (req, res) => {
+  try {
+    // Informações da requisição recebida
+    const { userId, purchaseAmount } = req.body;
 
-    if (!userId || !purchaseAmount) {
-        return res.status(400).json({ message: 'Dados inválidos: userId e purchaseAmount são obrigatórios.' });
-    }
+    // Gerar um ID único para o evento
+    const eventId = uuidv4();
 
-    try {
-        // Dados para enviar à API do Facebook
-        const data = {
-            data: [
-                {
-                    event_name: 'Purchase',
-                    event_time: Math.floor(Date.now() / 1000),
-                    user_data: {
-                        em: [hashData(userId)], // Hashe o e-mail
-                        ph: phoneNumber ? [hashData(phoneNumber)] : undefined, // Hashe o telefone, se disponível
-                        client_ip_address: req.ip, // Endereço IP do cliente
-                        client_user_agent: req.headers['user-agent'], // User Agent do cliente
-                    },
-                    custom_data: {
-                        currency: 'BRL',
-                        value: purchaseAmount,
-                    },
-                    test_event_code: 'TEST54809' // Código de teste do Facebook
-                }
-            ],
-            access_token: process.env.FB_ACCESS_TOKEN,
-        };
+    // Montar o payload para a API do Facebook
+    const payload = {
+      data: [
+        {
+          event_name: "Purchase",
+          event_time: Math.floor(Date.now() / 1000), // Timestamp atual em segundos
+          user_data: {
+            client_ip_address: req.ip, // Captura o IP do cliente
+            client_user_agent: req.get("User-Agent"), // Captura o User-Agent do cliente
+          },
+          custom_data: {
+            currency: "BRL",
+            value: purchaseAmount,
+          },
+          event_id: eventId, // ID único para deduplicação
+          action_source: "website",
+        },
+      ],
+    };
 
-        // Enviar evento para a API do Facebook
-        const response = await axios.post(`https://graph.facebook.com/v13.0/1183255336100829/events`, data);
+    // Enviar o evento para a API do Facebook
+    const response = await axios.post(
+      `https://graph.facebook.com/v16.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`,
+      payload
+    );
 
-        console.log("Evento enviado com sucesso ao Facebook:", response.data);
-        res.status(200).json({ message: 'Compra registrada com sucesso!' });
-    } catch (error) {
-        console.error("Erro ao enviar para a API do Facebook:", error.response?.data || error.message);
-        res.status(500).json({ message: 'Erro ao registrar compra' });
-    }
+    console.log("Evento enviado com sucesso!", response.data);
+    res.status(200).json({ message: "Compra registrada com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao enviar para a API do Facebook:", error.response?.data || error.message);
+    res.status(500).json({ message: "Erro ao registrar compra" });
+  }
 });
 
-// Iniciar o servidor
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+// Inicializar o servidor
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
