@@ -1,64 +1,69 @@
-const express = require("express");
-const axios = require("axios");
-const { v4: uuidv4 } = require("uuid");
+const express = require('express');
+const bodyParser = require('body-parser');
+const axios = require('axios');
 
 const app = express();
-app.use(express.json());
+app.use(bodyParser.json());
 
-const PIXEL_ID = "1183255336100829"; // Substitua pelo seu Pixel ID
-const ACCESS_TOKEN = "EAADFdaJM3XoBO2xbWKeyHri222SZBBZBHckQuZBDhyM2r89bqUTP75AV632aP56E1XqGWTm0UZAlFGPkQ8n3W3tmHiqFdjC2mmpSBU2LzuepZC9PS5gsj9ZAXeKRcr5ywNIjH3MLEQowdhQt3fHhwNH64qUscj59mgAZDZD"; // Substitua pelo seu Token de Acesso
+// Configurações
+const PIXEL_ID = '1183255336100829'; // Substitua pelo seu ID do Pixel
+const PIXEL_TOKEN = 'EAADFdaJM3XoBO2xbWKeyHri222SZBBZBHckQuZBDhyM2r89bqUTP75AV632aP56E1XqGWTm0UZAlFGPkQ8n3W3tmHiqFdjC2mmpSBU2LzuepZC9PS5gsj9ZADMQdUBeinXGk6a38mlc8tlPhthPfSCE9ZAXeKRcr5ywNIjH3MLEQowdhQt3fHhwNH64qUscj59mgAZDZD'; // Substitua pelo token
 
-app.post("/register-purchase", async (req, res) => {
-  try {
-    // Informações da requisição recebida
-    const { purchaseAmount, phoneNumber } = req.body;
+app.post('/register-purchase', async (req, res) => {
+    const { userId, purchaseAmount, phoneNumber } = req.body;
 
-    // Gerar um ID único para o evento
-    const eventId = uuidv4();
+    // Capturar IP e User Agent
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'];
 
-    // Capturar informações do cliente
-    const clientIpAddress = req.ip; // IP do cliente
-    const clientUserAgent = req.get("User-Agent"); // User Agent do cliente
-    const fbc = req.headers["fbc"] || "fb.1.1672537600.abc123"; // Substitua por um valor real, se disponível
+    // Validar dados recebidos
+    if (!userId || !purchaseAmount) {
+        return res.status(400).json({ message: 'userId e purchaseAmount são obrigatórios!' });
+    }
 
-    // Montar o payload para a API do Facebook
-    const payload = {
-      data: [
-        {
-          event_name: "Purchase",
-          event_time: Math.floor(Date.now() / 1000), // Timestamp atual em segundos
-          user_data: {
-            client_ip_address: clientIpAddress,
-            client_user_agent: clientUserAgent,
-            fbc: fbc,
-            phone: phoneNumber, // Adicionando o número de telefone
-          },
-          custom_data: {
-            currency: "BRL",
-            value: purchaseAmount,
-          },
-          event_id: eventId, // ID único para deduplicação
-          action_source: "website",
-        },
-      ],
-    };
+    try {
+        // Dados do evento a serem enviados ao Pixel
+        const eventData = {
+            data: [
+                {
+                    event_name: 'Purchase',
+                    event_time: Math.floor(new Date().getTime() / 1000),
+                    action_source: 'website',
+                    user_data: {
+                        external_id: userId,
+                        phone: phoneNumber,
+                        client_ip_address: clientIp,
+                        client_user_agent: userAgent,
+                        fbc: req.query.fbc || null, // Capturar fbc dos parâmetros da URL, se disponível
+                    },
+                    custom_data: {
+                        value: purchaseAmount,
+                        currency: 'BRL',
+                    },
+                },
+            ],
+        };
 
-    // Enviar o evento para a API do Facebook
-    const response = await axios.post(
-      `https://graph.facebook.com/v16.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`,
-      payload
-    );
+        // Enviar para a API do Pixel
+        const response = await axios.post(
+            `https://graph.facebook.com/v12.0/${PIXEL_ID}/events?access_token=${PIXEL_TOKEN}`,
+            eventData
+        );
 
-    console.log("Evento enviado com sucesso!", response.data);
-    res.status(200).json({ message: "Compra registrada com sucesso!" });
-  } catch (error) {
-    console.error("Erro ao enviar para a API do Facebook:", error.response?.data || error.message);
-    res.status(500).json({ message: "Erro ao registrar compra" });
-  }
+        // Verificar resposta da API
+        if (response.data.error) {
+            throw new Error(response.data.error.message);
+        }
+
+        res.status(200).json({ message: 'Compra registrada com sucesso!' });
+    } catch (error) {
+        console.error('Erro ao enviar para a API do Facebook:', error.response?.data || error.message);
+        res.status(500).json({ message: 'Erro ao registrar compra' });
+    }
 });
 
-// Inicializar o servidor
+// Porta padrão
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
