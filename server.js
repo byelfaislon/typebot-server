@@ -1,3 +1,4 @@
+// Importando bibliotecas
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -5,11 +6,13 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 
+// Configurações do servidor
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-const PIXEL_ID = process.env.PIXEL_ID;
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
+// Variáveis de ambiente
+const PIXEL_ID = process.env.PIXEL_ID || '1183255336100829';
+const ACCESS_TOKEN = process.env.ACCESS_TOKEN || 'EAADFdaJM3XoBO2xbWKeyHri222SZBBZBHckQuZBDhyM2r89bqUTP75AV632aP56E1XqGWTm0UZAlFGPkQ8n3W3tmHiqFdjC2mmpSBU2LzuepZC9PS5gsj9ZADMQdUBeinXGk6a38mlc8tlPhthPfSCE9ZAXeKRcr5ywNIjH3MLEQowdhQt3fHhwNH64qUscj59mgAZDZD';
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -32,7 +35,7 @@ app.post('/register-purchase', async (req, res) => {
         const phoneNumber = req.body.phoneNumber || ''; // Opcional
         const fbc = req.body.fbc || ''; // Opcional, mas esperado pelo Facebook
 
-        // Verifique o formato do fbc
+        // Validação do formato de fbc
         if (fbc && !/^fb\.\d+\.\d+\..+$/.test(fbc)) {
             console.warn('Formato inválido de fbc:', fbc);
         }
@@ -61,13 +64,13 @@ app.post('/register-purchase', async (req, res) => {
                         currency: 'BRL',
                         value: purchaseAmount,
                     },
-                    event_source_url: 'https://juliamariana.com/validarcompranovo', // Atualizado sem ponto-e-vírgula
+                    event_source_url: 'https://juliamariana.com/validarcompranovo', // Certifique-se de que não há ponto-e-vírgula
                     action_source: 'website',
                 },
             ],
         };
 
-        console.log('Dados enviados ao Facebook:', JSON.stringify(facebookData, null, 2));
+        console.log('Dados enviados ao Facebook (validação final):', JSON.stringify(facebookData, null, 2));
 
         // Envio para a API do Facebook
         const response = await axios.post(
@@ -76,7 +79,7 @@ app.post('/register-purchase', async (req, res) => {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${ACCESS_TOKEN}`.trim(), // Garante que o token não tenha caracteres inválidos
+                    Authorization: `Bearer ${ACCESS_TOKEN}`,
                 },
             }
         );
