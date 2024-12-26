@@ -8,14 +8,8 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Usando as variáveis de ambiente do Railway
 const PIXEL_ID = process.env.PIXEL_ID;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
-
-if (!PIXEL_ID || !ACCESS_TOKEN) {
-    console.error("Erro: PIXEL_ID ou ACCESS_TOKEN não configurados como variáveis de ambiente.");
-    process.exit(1);
-}
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -67,7 +61,7 @@ app.post('/register-purchase', async (req, res) => {
                         currency: 'BRL',
                         value: purchaseAmount,
                     },
-                    event_source_url: 'https://juliamariana.com/validarcompranovo', // URL configurada
+                    event_source_url: 'https://juliamariana.com/validarcompranovo', // Atualizado sem ponto-e-vírgula
                     action_source: 'website',
                 },
             ],
@@ -82,7 +76,7 @@ app.post('/register-purchase', async (req, res) => {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${ACCESS_TOKEN}`,
+                    Authorization: `Bearer ${ACCESS_TOKEN}`.trim(), // Garante que o token não tenha caracteres inválidos
                 },
             }
         );
