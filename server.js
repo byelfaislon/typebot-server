@@ -42,12 +42,16 @@ app.post('/register-purchase', async (req, res) => {
             ? crypto.createHash('sha256').update(phoneNumber).digest('hex')
             : '';
 
+        // Gera um event_id único para desduplicação
+        const eventId = uuidv4();
+
         // Dados para envio à API do Facebook
         const facebookData = {
             data: [
                 {
                     event_name: 'Purchase',
                     event_time: Math.floor(Date.now() / 1000),
+                    event_id: eventId, // Adiciona o event_id
                     user_data: {
                         client_user_agent: req.headers['user-agent'] || '',
                         fbc: fbc || null, // Inclua o fbc apenas se existir
@@ -92,4 +96,3 @@ app.post('/register-purchase', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
-
