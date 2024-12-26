@@ -32,18 +32,10 @@ app.post('/register-purchase', async (req, res) => {
         const phoneNumber = req.body.phoneNumber || ''; // Opcional
         const fbc = req.body.fbc || ''; // Opcional, mas esperado pelo Facebook
 
-        // Verifique o formato do fbc
-        if (fbc && !/^fb\.\d+\.\d+\..+$/.test(fbc)) {
-            console.warn('Formato inválido de fbc:', fbc);
-        }
-
         // Hash do número de telefone (se existir)
         const hashedPhone = phoneNumber
             ? crypto.createHash('sha256').update(phoneNumber).digest('hex')
             : '';
-
-        // Gera um event_id único para desduplicação
-        const eventId = uuidv4();
 
         // Dados para envio à API do Facebook
         const facebookData = {
@@ -51,23 +43,22 @@ app.post('/register-purchase', async (req, res) => {
                 {
                     event_name: 'Purchase',
                     event_time: Math.floor(Date.now() / 1000),
-                    event_id: eventId, // Adiciona o event_id
                     user_data: {
-                        client_user_agent: req.headers['user-agent'] || '',
-                        fbc: fbc || null, // Inclua o fbc apenas se existir
-                        ph: hashedPhone || null, // Inclua o ph apenas se existir
+                        client_user_agent: req.headers['user-agent'],
+                        fbc: fbc,
+                        ph: hashedPhone,
                     },
                     custom_data: {
                         currency: 'BRL',
                         value: purchaseAmount,
                     },
-                    event_source_url: 'https://juliamariana.com/validarcompranovo', // Atualizado sem ponto-e-vírgula
+                    event_source_url: 'https://example.com', // Ajuste com o URL correto
                     action_source: 'website',
                 },
             ],
         };
 
-        console.log('Dados enviados ao Facebook:', JSON.stringify(facebookData, null, 2));
+        console.log('Dados enviados ao Facebook:', facebookData);
 
         // Envio para a API do Facebook
         const response = await axios.post(
@@ -84,10 +75,7 @@ app.post('/register-purchase', async (req, res) => {
         console.log('Resposta do Facebook:', response.data);
         res.status(200).json({ message: 'Compra registrada com sucesso!' });
     } catch (error) {
-        console.error(
-            'Erro ao processar a compra:',
-            error.response ? error.response.data : error.message
-        );
+        console.error('Erro ao processar a compra:', error.response ? error.response.data : error.message);
         res.status(500).json({ message: 'Erro ao registrar compra' });
     }
 });
