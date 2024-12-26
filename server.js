@@ -32,6 +32,11 @@ app.post('/register-purchase', async (req, res) => {
         const phoneNumber = req.body.phoneNumber || ''; // Opcional
         const fbc = req.body.fbc || ''; // Opcional, mas esperado pelo Facebook
 
+        // Verifique o formato do fbc
+        if (fbc && !/^fb\.\d+\.\d+\..+$/.test(fbc)) {
+            console.warn('Formato inválido de fbc:', fbc);
+        }
+
         // Hash do número de telefone (se existir)
         const hashedPhone = phoneNumber
             ? crypto.createHash('sha256').update(phoneNumber).digest('hex')
@@ -44,9 +49,9 @@ app.post('/register-purchase', async (req, res) => {
                     event_name: 'Purchase',
                     event_time: Math.floor(Date.now() / 1000),
                     user_data: {
-                        client_user_agent: req.headers['user-agent'],
-                        fbc: fbc,
-                        ph: hashedPhone,
+                        client_user_agent: req.headers['user-agent'] || '',
+                        fbc: fbc || null, // Inclua o fbc apenas se existir
+                        ph: hashedPhone || null, // Inclua o ph apenas se existir
                     },
                     custom_data: {
                         currency: 'BRL',
@@ -58,7 +63,7 @@ app.post('/register-purchase', async (req, res) => {
             ],
         };
 
-        console.log('Dados enviados ao Facebook:', facebookData);
+        console.log('Dados enviados ao Facebook:', JSON.stringify(facebookData, null, 2));
 
         // Envio para a API do Facebook
         const response = await axios.post(
@@ -75,7 +80,10 @@ app.post('/register-purchase', async (req, res) => {
         console.log('Resposta do Facebook:', response.data);
         res.status(200).json({ message: 'Compra registrada com sucesso!' });
     } catch (error) {
-        console.error('Erro ao processar a compra:', error.response ? error.response.data : error.message);
+        console.error(
+            'Erro ao processar a compra:',
+            error.response ? error.response.data : error.message
+        );
         res.status(500).json({ message: 'Erro ao registrar compra' });
     }
 });
@@ -84,3 +92,4 @@ app.post('/register-purchase', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
+
