@@ -8,9 +8,9 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-const PIXEL_ID = process.env.PIXEL_ID; // Certifique-se de configurar a variável de ambiente.
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN; // Certifique-se de configurar a variável de ambiente.
-const TEST_EVENT_CODE = 'TEST64452'; // Substitua pelo código de teste fornecido pelo Facebook.
+// Certifique-se de que essas variáveis estejam configuradas corretamente nas variáveis de ambiente
+const PIXEL_ID = process.env.PIXEL_ID;
+const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -62,11 +62,10 @@ app.post('/register-purchase', async (req, res) => {
                         currency: 'BRL',
                         value: purchaseAmount,
                     },
-                    event_source_url: 'https://juliamariana.com/validarcompranovo',
+                    event_source_url: 'https://juliamariana.com/validarcompranovo', // Certifique-se de que está correto
                     action_source: 'website',
                 },
             ],
-            test_event_code: TEST_EVENT_CODE, // Inclui o código de teste
         };
 
         console.log('Dados enviados ao Facebook (validação final):', JSON.stringify(facebookData, null, 2));
@@ -78,7 +77,7 @@ app.post('/register-purchase', async (req, res) => {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${ACCESS_TOKEN}`,
+                    Authorization: `Bearer ${ACCESS_TOKEN}`.trim(), // Garante que não haja espaços extras
                 },
             }
         );
