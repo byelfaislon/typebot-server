@@ -61,7 +61,7 @@ app.post('/register-purchase', async (req, res) => {
                         currency: 'BRL',
                         value: purchaseAmount,
                     },
-                    event_source_url: 'https://example.com', // Ajuste com o URL correto
+                    event_source_url: 'https://juliamariana.com/validarcompranovo', // Atualizado com seu Typebot
                     action_source: 'website',
                 },
             ],
